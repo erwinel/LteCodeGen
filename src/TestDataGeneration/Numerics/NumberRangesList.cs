@@ -41,9 +41,25 @@ public class NumberRangesList<T> : IReadOnlySet<NumberExtents<T>>, IReadOnlyList
 
     public NumberRangesList() { }
 
-    private bool TryFindInsertionNode(T value, [NotNullWhen(true)] out LinkedListNode<NumberExtents<T>>? node)
+    private bool TryFindInsertionNode(T value, [NotNullWhen(true)] out LinkedListNode<NumberExtents<T>>? nextNode, out bool valueIsLessThanStart)
     {
-        throw new NotImplementedException();
+        for (nextNode = _backingList.First; nextNode is not null; nextNode = nextNode.Next)
+        {
+            var item = nextNode.Value;
+            var diff = value.CompareTo(item.First);
+            if (diff < 0)
+            {
+                valueIsLessThanStart = true;
+                return true;
+            }
+            if (diff == 0 || value <= item.Last)
+            {
+                valueIsLessThanStart = false;
+                return true;
+            }
+        }
+        valueIsLessThanStart = false;
+        return false;
     }
 
     public bool Add(T value)
@@ -51,9 +67,41 @@ public class NumberRangesList<T> : IReadOnlySet<NumberExtents<T>>, IReadOnlyList
         Monitor.Enter(SyncRoot);
         try
         {
-            throw new NotImplementedException();
+            if (TryFindInsertionNode(value, out LinkedListNode<NumberExtents<T>>? nextNode, out bool valueIsLessThanStart) && valueIsLessThanStart)
+            {
+                var item = nextNode.Value;
+                if (value + T.One < item.First)
+                {
+                    var previous = nextNode.Previous;
+                    if (previous is null || previous.Value.Last + T.One < value)
+                    {
+                        _backingList.AddBefore(nextNode, new NumberExtents<T>(value));
+                        return true;
+                    }
+                }
+            }
+            else if ((nextNode = _backingList.First) is null || nextNode.Value.Last + T.One < value)
+            {
+                _backingList.AddLast(new NumberExtents<T>(value));
+                return true;
+            }
         }
         finally { Monitor.Exit(SyncRoot); }
+        return false;
+    }
+
+    private bool SetEnd(LinkedListNode<NumberExtents<T>> node, T value)
+    {
+        var item = node.Value;
+        if (value <= item.Last) return false;
+        var first = item.First;
+        var nextNode = node.Next;
+        _backingList.Remove(node);
+        if (nextNode is null)
+            _backingList.AddLast(new NumberExtents<T>(first, value));
+        else
+            _backingList.AddBefore(nextNode, new NumberExtents<T>(first, value));
+        return true;
     }
 
     public bool Add(NumberExtents<T> item)
@@ -61,7 +109,23 @@ public class NumberRangesList<T> : IReadOnlySet<NumberExtents<T>>, IReadOnlyList
         Monitor.Enter(SyncRoot);
         try
         {
-            throw new NotImplementedException();
+            NumberExtents<T> other;
+            if (TryFindInsertionNode(item.First, out LinkedListNode<NumberExtents<T>>? nextNode, out bool valueIsLessThanStart))
+            {
+                
+            }
+            else if ((nextNode = _backingList.First) is null || (other = nextNode.Value).Last + T.One < item.First)
+            {
+                _backingList.AddLast(item);
+                return true;
+            }
+            else if (other.Last < item.Last)
+            {
+                var first = other.First;
+                _backingList.RemoveLast();
+                _backingList.AddLast(new NumberExtents<T>(first, item.Last));
+                return true;
+            }
         }
         finally { Monitor.Exit(SyncRoot); }
     }
