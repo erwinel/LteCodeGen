@@ -25,6 +25,22 @@ public class NumberRangesList<T> : IReadOnlySet<NumberExtents<T>>, IReadOnlyList
 
     NumberExtents<T> IReadOnlyList<NumberExtents<T>>.this[int index] => GetItemAt(index);
 
+    public NumberRangesList(IEnumerable<NumberExtents<T>> collection)
+    {
+        throw new NotImplementedException();
+    }
+
+    public NumberRangesList(IEnumerable<(T First, T Last)> collection)
+    {
+        throw new NotImplementedException();
+    }
+
+    public NumberRangesList(params NumberExtents<T>[] list) : this((IEnumerable<NumberExtents<T>>)list) { }
+
+    public NumberRangesList(params (T First, T Last)[] list) : this((IEnumerable<(T First, T Last)>)list) { }
+
+    public NumberRangesList() { }
+
     private bool TryFindInsertionNode(T value, [NotNullWhen(true)] out LinkedListNode<NumberExtents<T>>? node)
     {
         throw new NotImplementedException();
