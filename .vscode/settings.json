@@ -7,6 +7,9 @@
         "editor.defaultFormatter": "ms-dotnettools.csharp"
     },
     "markdown.extension.toc.levels": "2..6",
+    "auto-close-tag.disableOnLanguage": [
+        "csharp", "powershell", "json", "javascript", "markdown"
+    ],
     "todohighlight.keywords": [
         {
             "text": "TODO:",
